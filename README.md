@@ -7,3 +7,6 @@ Play youtube videos on mute in resizable windows floating on-top (Requires VLC t
 2. run: python play_video.py
 
 
+# Compiling
+
+pyinstaller --onefile --noconsole play_video.py

@@ -9,3 +9,5 @@
 .idea/aws.xml
 __pycache__/play_video.cpython-38.pyc
 play_video.spec
+/build/
+/dist/
