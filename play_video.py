@@ -69,6 +69,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs, )
         self.center()
         self.oldPos = self.pos()
+        self.mute = False
 
         flags = QtCore.Qt.WindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
         self.setWindowFlags(flags)
@@ -114,7 +115,7 @@ class MainWindow(QMainWindow):
 
 
 
-        # self.videoPlayer.audio_set_mute(True)
+        #
         if sys.platform.startswith('linux'):  # for Linux using the X Server
             self.videoPlayer.set_xwindow(self.videoFrame.winId())
         elif sys.platform == "win32":  # for Windows
@@ -153,6 +154,9 @@ class MainWindow(QMainWindow):
     #             QApplication.instance().desktop().availableGeometry()
     #         )
     #     )
+    def switch_mute(self):
+        self.mute = not self.mute
+        self.videoPlayer.audio_set_mute(self.mute)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -165,6 +169,11 @@ class MainWindow(QMainWindow):
     def mouseMoveEvent(self, event):
         if not self.__press_pos.isNull():
             self.move(self.pos() + (event.pos() - self.__press_pos))
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_M:
+            self.switch_mute()
+        event.accept()
     @property
     def gripSize(self):
         return self._gripSize
