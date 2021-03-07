@@ -113,16 +113,13 @@ class MainWindow(QMainWindow):
 
         self.resize(640, 480)
 
-
-
-        #
         if sys.platform.startswith('linux'):  # for Linux using the X Server
             self.videoPlayer.set_xwindow(self.videoFrame.winId())
         elif sys.platform == "win32":  # for Windows
             self.videoPlayer.set_hwnd(self.videoFrame.winId())
         elif sys.platform == "darwin":  # for MacOS
             self.videoPlayer.set_nsobject(int(self.videoFrame.winId()))
-        # self.vlcInstance.vlm_set_loop(media, True)
+        self.vlcInstance.vlm_set_loop(media, True)
         self.videoPlayer.play()
         self.show()
 
