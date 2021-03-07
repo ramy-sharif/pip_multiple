@@ -1,0 +1,11 @@
+/venv/
+.idea/vcs.xml
+.idea/pip_multiple.iml
+.idea/modules.xml
+.idea/misc.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/deployment.xml
+.idea/csv-plugin.xml
+.idea/aws.xml
+__pycache__/play_video.cpython-38.pyc
+play_video.spec

@@ -1,6 +1,7 @@
 import pafy
 import sys
 import vlc
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -61,23 +62,22 @@ class SideGrip(QWidget):
     def mouseReleaseEvent(self, event):
         self.mousePos = None
 
-
 class MainWindow(QMainWindow):
     _gripSize = 1
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs, )
+        self.center()
+        self.oldPos = self.pos()
 
-        self.setWindowFlags(Qt.FramelessWindowHint)
-
+        flags = QtCore.Qt.WindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(flags)
         self.sideGrips = [
             SideGrip(self, Qt.LeftEdge),
             SideGrip(self, Qt.TopEdge),
             SideGrip(self, Qt.RightEdge),
             SideGrip(self, Qt.BottomEdge),
         ]
-        self.setWindowFlags(Qt.FramelessWindowHint)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         # corner grips should be "on top" of everything, otherwise the side grips
         # will take precedence on mouse events, so we are adding them *after*;
@@ -87,6 +87,7 @@ class MainWindow(QMainWindow):
         self.move(100, 10)
 
         self.videoFrame = QFrame()
+        self.videoFrame.installEventFilter(self)
         self.setCentralWidget(self.videoFrame)
 
         self.vlcInstance = vlc.Instance(
@@ -94,6 +95,8 @@ class MainWindow(QMainWindow):
         self.videoPlayer = self.vlcInstance.media_player_new()
         url, ok = QInputDialog.getText(
             self, 'Text Input Dialog', 'Enter video link:')
+        self.videoPlayer.video_set_mouse_input(False)
+        self.videoPlayer.video_set_key_input(False)
 
         # creating pafy object of the video
         video = pafy.new(url)
@@ -107,7 +110,11 @@ class MainWindow(QMainWindow):
         media.get_mrl()
         self.videoPlayer.set_media(media)
 
-        self.videoPlayer.audio_set_mute(True)
+        self.resize(640, 480)
+
+
+
+        # self.videoPlayer.audio_set_mute(True)
         if sys.platform.startswith('linux'):  # for Linux using the X Server
             self.videoPlayer.set_xwindow(self.videoFrame.winId())
         elif sys.platform == "win32":  # for Windows
@@ -118,15 +125,46 @@ class MainWindow(QMainWindow):
         self.videoPlayer.play()
         self.show()
 
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    # def eventFilter(self, watched, event):
+    #     print(event)
+    #     if event.type() == QtCore.QEvent.MouseButtonPress:
+    #         self.mousePressEvent(event)
+    #     if event.type() == QtCore.QEvent.MouseButtonRelease:
+    #         self.mouseReleaseEvent(event)
+    #     if event.type() == QtCore.QEvent.MouseMove:
+    #         self.mouseMoveEvent(event)
+    #     return super(MainWindow, self).eventFilter(watched, event)
+
+    # def initUI(self):
+    #     self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+    #     self.setAttribute(Qt.WA_TranslucentBackground)
+    #     self.adjustSize()
+    #     self.setGeometry(
+    #         QStyle.alignedRect(
+    #             Qt.LeftToRight,
+    #             Qt.AlignCenter,
+    #             self.size(),
+    #             QApplication.instance().desktop().availableGeometry()
+    #         )
+    #     )
+
     def mousePressEvent(self, event):
-        self.oldPos = event.globalPos()
+        if event.button() == Qt.LeftButton:
+            self.__press_pos = event.pos()
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.__press_pos = QPoint()
 
     def mouseMoveEvent(self, event):
-        delta = QPoint(event.globalPos() - self.oldPos)
-        # print(delta)
-        self.move(self.x() + delta.x(), self.y() + delta.y())
-        self.oldPos = event.globalPos()
-
+        if not self.__press_pos.isNull():
+            self.move(self.pos() + (event.pos() - self.__press_pos))
     @property
     def gripSize(self):
         return self._gripSize
