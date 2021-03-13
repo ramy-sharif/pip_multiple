@@ -96,6 +96,8 @@ class MainWindow(QMainWindow):
         self.videoPlayer = self.vlcInstance.media_player_new()
         url, ok = QInputDialog.getText(
             self, 'Text Input Dialog', 'Enter video link:')
+        if not ok:
+            self.close()
         self.videoPlayer.video_set_mouse_input(False)
         self.videoPlayer.video_set_key_input(False)
 
@@ -112,14 +114,13 @@ class MainWindow(QMainWindow):
         self.videoPlayer.set_media(media)
 
         self.resize(640, 480)
-
         if sys.platform.startswith('linux'):  # for Linux using the X Server
             self.videoPlayer.set_xwindow(self.videoFrame.winId())
         elif sys.platform == "win32":  # for Windows
-            self.videoPlayer.set_hwnd(self.videoFrame.winId())
+            self.videoPlayer.set_hwnd(int(self.videoFrame.winId()))
         elif sys.platform == "darwin":  # for MacOS
             self.videoPlayer.set_nsobject(int(self.videoFrame.winId()))
-        self.vlcInstance.vlm_set_loop(media, True)
+        # self.vlcInstance.vlm_set_loop(media, True)
         self.videoPlayer.play()
         self.show()
 
@@ -155,6 +156,37 @@ class MainWindow(QMainWindow):
         self.mute = not self.mute
         self.videoPlayer.audio_set_mute(self.mute)
 
+    def restart(self):
+        url, ok = QInputDialog.getText(
+            self, 'Text Input Dialog', 'Enter video link:')
+        if not ok:
+            self.close()
+        self.videoPlayer.video_set_mouse_input(False)
+        self.videoPlayer.video_set_key_input(False)
+
+        # creating pafy object of the video
+        video = pafy.new(url)
+
+        # getting best stream
+        best = video.getbest()
+
+        playurl = best.url
+
+        media = self.vlcInstance.media_new(playurl)
+        media.get_mrl()
+        self.videoPlayer.set_media(media)
+
+        self.resize(640, 480)
+        if sys.platform.startswith('linux'):  # for Linux using the X Server
+            self.videoPlayer.set_xwindow(self.videoFrame.winId())
+        elif sys.platform == "win32":  # for Windows
+            self.videoPlayer.set_hwnd(int(self.videoFrame.winId()))
+        elif sys.platform == "darwin":  # for MacOS
+            self.videoPlayer.set_nsobject(int(self.videoFrame.winId()))
+        # self.vlcInstance.vlm_set_loop(media, True)
+        self.videoPlayer.play()
+
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.__press_pos = event.pos()
@@ -170,6 +202,9 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_M:
             self.switch_mute()
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.restart()
+
         event.accept()
     @property
     def gripSize(self):
@@ -226,5 +261,5 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setApplicationName("VLC Test")
 
-    window = MainWindow()
+    self = MainWindow()
     app.exec_()
