@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
         self.center()
         self.oldPos = self.pos()
         self.mute = False
+        self.pause = False
 
         flags = QtCore.Qt.WindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
         self.setWindowFlags(flags)
@@ -129,32 +130,19 @@ class MainWindow(QMainWindow):
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-
-    # def eventFilter(self, watched, event):
-    #     print(event)
-    #     if event.type() == QtCore.QEvent.MouseButtonPress:
-    #         self.mousePressEvent(event)
-    #     if event.type() == QtCore.QEvent.MouseButtonRelease:
-    #         self.mouseReleaseEvent(event)
-    #     if event.type() == QtCore.QEvent.MouseMove:
-    #         self.mouseMoveEvent(event)
-    #     return super(MainWindow, self).eventFilter(watched, event)
-
-    # def initUI(self):
-    #     self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-    #     self.setAttribute(Qt.WA_TranslucentBackground)
-    #     self.adjustSize()
-    #     self.setGeometry(
-    #         QStyle.alignedRect(
-    #             Qt.LeftToRight,
-    #             Qt.AlignCenter,
-    #             self.size(),
-    #             QApplication.instance().desktop().availableGeometry()
-    #         )
-    #     )
     def switch_mute(self):
         self.mute = not self.mute
         self.videoPlayer.audio_set_mute(self.mute)
+
+    def switch_pause(self):
+        self.pause = not self.pause
+        if self.pause:
+            self.videoPlayer.pause()
+        else:
+            self.videoPlayer.play()
+
+    def change_time(self, time):
+        self.videoPlayer.set_time(self.videoPlayer.get_time() + time)
 
     def restart(self):
         url, ok = QInputDialog.getText(
@@ -204,6 +192,12 @@ class MainWindow(QMainWindow):
             self.switch_mute()
         if event.key() == QtCore.Qt.Key_Escape:
             self.restart()
+        if event.key() == QtCore.Qt.Key_Right:
+            self.change_time(1000)
+        if event.key() == QtCore.Qt.Key_Left:
+            self.change_time(-1000)
+        if event.key() == QtCore.Qt.Key_Space:
+            self.switch_pause()
 
         event.accept()
     @property
